@@ -11,7 +11,8 @@
       <meta charset="UTF-8" />
 
 
-<link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.1/build/packages/ext-theme-gray/build/resources/ext-theme-gray-all.css">
+<link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.1/build/packages/ext-theme-neptune/build/resources/ext-theme-neptune-all.css">
+<link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.1/build/packages/sencha-charts/build/neptune/resources/sencha-charts-all.css">
 <!-- link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.0/build/packages/sencha-charts/build/classic/resources/sencha-charts-all.css"-->
 
 
@@ -172,7 +173,10 @@
           xtype: 'mygrouppanel',
           
           constructor: function(config) {
+              var title = config.title + ' (' + config.items.length + ' item' + (config.items.length != 1 ? 's' : '')  + ')'
               Ext.apply(config, {
+                  title: title,
+                  collapsed: true,
                   layout: {
                       type: 'accordion',
                       hideCollapseTool: true,
@@ -181,8 +185,6 @@
                   plugins: ['collapsedaccordian']
               });
               this.callParent(arguments);
-              
-              this.on('childexpand', this.onChildExpand, this);
           },
           
           onChildExpand: function(groupPanel, rowPanel) {
@@ -219,6 +221,11 @@
                       }, this);
                   }
               }, this);
+              
+              this.on({
+                  childexpand: this.onChildExpand,
+                  scope: this
+              });
           }
       });
       
@@ -241,6 +248,7 @@
                       fill: false,
                       multi: true
                   },
+                  autoScroll: true,
                   plugins: ['collapsedaccordian'],
                   items: [{
                       xtype: 'mygrouppanel',
