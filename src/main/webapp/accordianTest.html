@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!-- Credits for icons from http://www.fatcow.com/free-icons/ under http://creativecommons.org/licenses/by/3.0/us/-->
+<html xmlns:v="urn:schemas-microsoft-com:vml">
+   <head>
+      <title>AuScope Discovery Portal</title>
+
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="description" content="Access geoscientific information from around Australia, via AuScopes national e-Research infrastructure.">
+      <meta name="keywords" content="AuScope, Discovery, Resources, GeoSciML, Mineral Occurrence, Geologic Unit, Australia">
+      <meta name="author" content="AuScope">
+      <meta charset="UTF-8" />
+
+
+<link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.1/build/packages/ext-theme-gray/build/resources/ext-theme-gray-all.css">
+<!-- link rel="stylesheet" type="text/css" href="portal-core/js/ext-5.1.0/build/packages/sencha-charts/build/classic/resources/sencha-charts-all.css"-->
+
+
+<!-- link extjs 5 -->
+<script type="text/javascript" src="portal-core/js/ext-5.1.1/build/ext-all-debug.js"></script>
+<script type="text/javascript" src="portal-core/js/ext-5.1.1/build/packages/ext-ux/build/ext-ux-debug.js"></script>
+<script type="text/javascript" src="portal-core/js/ext-5.1.1/build/examples/ux/Spotlight.js"></script>
+<script type="text/javascript" src="portal-core/js/ext-5.1.1/build/examples/ux/form/SearchField.js"></script>
+      
+
+<script src="portal-core/js/portal/util/ObservableMap.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/util/UnimplementedFunction.js" type="text/javascript"></script>
+
+<script src="portal-core/js/portal/widgets/grid/column/ClickColumn.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/column/RenderableCheckColumn.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/plugin/CellTips.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/plugin/SelectableGrid.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/plugin/RowContextMenu.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/plugin/RowExpanderContainer.js" type="text/javascript"></script>
+<script src="portal-core/js/portal/widgets/grid/plugin/InlineContextMenu.js" type="text/javascript"></script>
+
+    <style type="text/css">
+    .myhiddenclass .x-grid-row {
+        display: none;
+    }
+    
+    .myhiddenclass .x-grid-rowbody-tr {
+        display: none;
+    }
+    </style>
+
+      <script type="text/javascript">
+      Ext.define('my.AccordianDefault', {
+          extend: 'Ext.layout.container.Accordion',
+          alias: 'layout.accordiondefault',
+          type: 'accordiondefault',
+          
+          defaultQuery: null,
+          
+          constructor: function(config) {
+              this.defaultQuery = '#' + config.defaultId;
+              this.callParent(arguments);
+          },
+          
+          /**
+           * Override the default implementation with one that chooses the next expand target 
+           * using our "defaultQuery"
+           */
+          onBeforeComponentCollapse: function(comp) {
+              var me = this,
+                  owner = me.owner,
+                  toExpand,
+                  expanded,
+                  previousValue;
+       
+              if (me.owner.items.getCount() === 1) {
+                  // do not allow collapse if there is only one item 
+                  return false;
+              }
+       
+              if (!me.processing) {
+                  me.processing = true;
+                  previousValue = owner.deferLayouts;
+                  owner.deferLayouts = true;
+                  toExpand = comp.previousSibling(me.defaultQuery) || comp.nextSibling(me.defaultQuery);
+       
+                  // If we are allowing multi, and the "toCollapse" component is NOT the only expanded Component, 
+                  // then ask the box layout to collapse it to its header. 
+                  if (me.multi) {
+                      expanded = me.getExpanded();
+       
+                      // If the collapsing Panel is the only expanded one, expand the following Component. 
+                      // All this is handling fill: true, so there must be at least one expanded, 
+                      if (expanded.length === 1) {
+                          toExpand.expand();
+                      }
+       
+                  } else if (toExpand) {
+                      toExpand.expand();
+                  }
+                  owner.deferLayouts = previousValue;
+                  me.processing = false;
+              }
+          }
+      });
+      
+      Ext.define('my.CollapsedAccordian', {
+          extend: 'Ext.plugin.Abstract',
+          alias: 'plugin.collapsedaccordian',
+          
+          statics: {
+              HIDDEN_ID: 'collapsedtarget'  
+          },
+          
+          init: function(cmp) {
+              cmp.insert(0, {
+                   xtype: 'panel',
+                   hidden: true,
+                   itemId: my.CollapsedAccordian.HIDDEN_ID,
+                   collapsed: false
+              });
+              
+              var cfg = Ext.apply({}, cmp.initialConfig);
+              var layoutCfg = cfg.layout;
+              if (Ext.isString(layoutCfg)) {
+                  layoutCfg = {};
+              } 
+              
+              layoutCfg.type = 'accordiondefault';
+              layoutCfg.defaultId = my.CollapsedAccordian.HIDDEN_ID;
+              cmp.setLayout(layoutCfg)
+          }
+      });
+      
+      Ext.define('my.RowPanel', {
+          extend: 'Ext.panel.Panel',
+          xtype: 'myrowpanel',
+          
+          constructor: function(config) {
+              Ext.apply(config, {
+                  layout: 'fit',
+                  header: {
+                      titlePosition: 2,
+                      style: 'background-color:white;',
+                      items: [{
+                          xtype: 'image',
+                          width: 16,
+                          height: 16,
+                          margin: '0 10 0 10',
+                          src: 'portal-core/img/play_blue.png'
+                      },{
+                          xtype: 'image',
+                          width: 16,
+                          height: 16,
+                          margin: '0 10 0 10',
+                          src: 'portal-core/img/notloading.gif'
+                      },{
+                          xtype: 'image',
+                          width: 16,
+                          height: 16,
+                          margin: '0 10 0 10',
+                          src: 'portal-core/img/binary-small.png'
+                      },{
+                          xtype: 'image',
+                          width: 16,
+                          height: 16,
+                          margin: '0 10 0 10',
+                          src: 'portal-core/img/magglass.gif'
+                      }]
+                  }
+              });
+              this.callParent(arguments);
+          }
+      });
+      
+      Ext.define('my.GroupPanel', {
+          extend: 'Ext.panel.Panel',
+          xtype: 'mygrouppanel',
+          
+          constructor: function(config) {
+              Ext.apply(config, {
+                  layout: {
+                      type: 'accordion',
+                      hideCollapseTool: true,
+                      fill: false
+                  },
+                  plugins: ['collapsedaccordian']
+              });
+              this.callParent(arguments);
+              
+              this.on('childexpand', this.onChildExpand, this);
+          },
+          
+          onChildExpand: function(groupPanel, rowPanel) {
+              groupPanel.ownerCt.suspendLayouts();
+              groupPanel.ownerCt.items.each(function(sibling) {
+                  if (sibling.getItemId() !== my.CollapsedAccordian.HIDDEN_ID &&
+                      sibling.getId() !== groupPanel.getId()) {
+                      sibling.collapseChildren();
+                  }
+              });
+              groupPanel.ownerCt.resumeLayouts();
+          },
+          
+          collapseChildren: function() {
+              console.log('Collapsing children of:', this.getTitle());
+              
+              this.items.each(function(item) {
+                  if (item.getItemId() !== my.CollapsedAccordian.HIDDEN_ID) {
+                      if (item.getCollapsed() === false) {
+                          console.log('Collapsing: ', item);
+                          item.collapse();
+                      }
+                  }
+              }, this);
+          },
+          
+          initComponent: function() {
+              this.callParent(arguments);
+              
+              this.items.each(function(item) {
+                  if (item.getItemId() !== my.CollapsedAccordian.HIDDEN_ID) {
+                      item.on('beforeexpand', function(item) {
+                          this.fireEvent('childexpand', this, item);
+                      }, this);
+                  }
+              }, this);
+          }
+      });
+      
+      Ext.application({
+          name : 'portal',
+          launch : function() {            
+              var i = 0;
+              Ext.define('Animal', {
+                  extend: 'Ext.data.Model',
+                  fields: ['name', 'latin', 'desc']
+              });
+
+              Ext.create('Ext.panel.Panel', {
+                  width: 400,
+                  height: 300,
+                  renderTo: 'foo',
+                  layout: {
+                      type: 'accordion',
+                      collapseFirst: true,
+                      fill: false,
+                      multi: true
+                  },
+                  plugins: ['collapsedaccordian'],
+                  items: [{
+                      xtype: 'mygrouppanel',
+                      title: 'Boreholes',
+                      items: [{
+                          xtype: 'myrowpanel',
+                          title: 'National Virtual Core Library',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      },{
+                          xtype: 'myrowpanel',
+                          title: 'Borehole View',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      },{
+                          xtype: 'myrowpanel',
+                          title: 'Pressure DB',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      }]
+                  },{
+                      xtype: 'mygrouppanel',
+                      title: 'CSIRO',
+                      items: [{
+                          xtype: 'myrowpanel',
+                          title: 'Random CSIRO Layer',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      }]
+                  },{
+                      xtype: 'mygrouppanel',
+                      title: 'Geoscience Australia',
+                      items: [{
+                          xtype: 'myrowpanel',
+                          title: 'Random GA Layer',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      },{
+                          xtype: 'myrowpanel',
+                          title: 'Another Random GA Layer',
+                          items: [{
+                              html: 'todo filter form'
+                          }]
+                      }]
+                  }]
+              });
+          }
+      });
+      </script>
+
+      <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon" />
+   </head>
+
+    <body>
+    
+   
+      
+      <div id="foo"  style="width:200px;height:200px;"></div>
+          
+      <div id="bar"  style="background-color:green;width:200px;height:20px;" onclick="showDiv();">Set Visible</div>
+      
+      <div id="bar2" style="background-color:blue;width:200px;height:20px;" onclick="hideDiv();">Set Hidden</div>
+      
+      <div id="bar3" style="background-color:grey;width:200px;height:20px;" onclick="renderTabs();">Render</div>
+      
+   </body>
+
+
+</html>
