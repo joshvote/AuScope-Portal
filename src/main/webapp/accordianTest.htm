@@ -127,6 +127,35 @@
           }
       });
       
+      Ext.define('my.ClickableImage', {
+          extend: 'Ext.plugin.Abstract',
+          alias: 'plugin.clickableimage',
+          
+          stopEvent: false,
+          
+          constructor: function(config) {
+              this.stopEvent = !!config.stopEvent;
+          },
+          
+          init: function(cmp) {
+              if (cmp.rendered) {
+                  this.installEvents(cmp);
+              } else {
+                  cmp.on('afterrender', this.installEvents, this);
+              }
+          },
+          
+          installEvents: function(cmp) {
+              var el = cmp.getEl();
+              el.on('click', function(e,t, eOpts) {
+                  if (this.stopEvent) {
+                      e.stopEvent();
+                  }
+                  cmp.fireEvent('click', cmp, e); 
+              }, this);
+          }
+      });
+      
       Ext.define('my.RowPanel', {
           extend: 'Ext.panel.Panel',
           xtype: 'myrowpanel',
@@ -142,25 +171,34 @@
                           width: 16,
                           height: 16,
                           margin: '0 10 0 10',
-                          src: 'portal-core/img/play_blue.png'
+                          src: 'portal-core/img/play_blue.png',
+                          plugins: ['clickableimage'],
+                          listeners: {
+                              click: function() {
+                                  console.log('click play');
+                              }
+                          }
                       },{
                           xtype: 'image',
                           width: 16,
                           height: 16,
                           margin: '0 10 0 10',
-                          src: 'portal-core/img/notloading.gif'
+                          src: 'portal-core/img/notloading.gif',
+                          plugins: [{ptype: 'clickableimage', stopEvent: true}]
                       },{
                           xtype: 'image',
                           width: 16,
                           height: 16,
                           margin: '0 10 0 10',
-                          src: 'portal-core/img/binary-small.png'
+                          src: 'portal-core/img/binary-small.png',
+                          plugins: [{ptype: 'clickableimage', stopEvent: true}]
                       },{
                           xtype: 'image',
                           width: 16,
                           height: 16,
                           margin: '0 10 0 10',
-                          src: 'portal-core/img/magglass.gif'
+                          src: 'portal-core/img/magglass.gif',
+                          plugins: [{ptype: 'clickableimage', stopEvent: true}]
                       }]
                   }
               });
@@ -199,12 +237,9 @@
           },
           
           collapseChildren: function() {
-              console.log('Collapsing children of:', this.getTitle());
-              
               this.items.each(function(item) {
                   if (item.getItemId() !== my.CollapsedAccordian.HIDDEN_ID) {
                       if (item.getCollapsed() === false) {
-                          console.log('Collapsing: ', item);
                           item.collapse();
                       }
                   }
