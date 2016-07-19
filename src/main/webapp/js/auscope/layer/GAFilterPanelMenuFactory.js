@@ -42,19 +42,6 @@ Ext.define('auscope.layer.GAFilterPanelMenuFactory', {
             }
         }
     },
-
-    _getResetFormAction : function(){
-        var me = this;
-        return new Ext.Action({
-            text : 'Reset Form',
-            iconCls : 'refresh',
-            handler : function(e){
-                // this is awkward but we need to get access to the form
-                var filterForm = this.up('panel').up('panel').getLayout().owner.filterForm;
-                filterForm.reset();
-            }
-        })
-    },
        
     _getDownloadAction : function(layer){
         var me = this;
