@@ -114,14 +114,14 @@ Ext.application({
                     if(!successful) {
                     	var errStr = "";
                     	var idx;
-                    	
+
                     	// Compile the returned error message
                     	for (idx=0; idx<records.length; idx++) {
                     	    if (records[idx].hasOwnProperty('data')) {
                     	        errStr += records[idx].data;
                     	    }
                     	}
-                    	
+
                     	// To prevent injection issues
                     	REPLACE_LIST = [/\'/g, /\"/g, /\=/g, /\</g, /\>/g, /\&/g, /\)/g, /\(/g, /\$/g, /\;/g, /\[/g, /\]/g, /\{/g, /\}/g];
                     	for (var i=0;i<REPLACE_LIST.length;i++) {
@@ -130,9 +130,9 @@ Ext.application({
 
                     	// If there was no returned error message, then use the generic message
                     	if (errStr.length===0) {
-                    	    errStr =  "Your WMS service has to support EPSG:3857 or EPSG:4326 to be supported by Google map. You are seeing this error because either the URL is not valid or it does   not conform to EPSG:3857 or EPSG:4326 WMS layers standards"                       
+                    	    errStr =  "Your WMS service has to support EPSG:3857 or EPSG:4326 to be supported by Google map. You are seeing this error because either the URL is not valid or it does   not conform to EPSG:3857 or EPSG:4326 WMS layers standards"
                     	}
-                    	
+
                     	if (errStr=="Your WMS does not appear to support EPSG:3857 WGS 84 / Pseudo-Mercator or EPSG:4326 WGS 84. This is required to be able to display your map in this Portal. If you are certain that your service supports EPSG:3857, click Yes for portal to attempt loading of the layer else No to exit.") {
                     	    // Display error message
                     	    Ext.Msg.show({
@@ -144,7 +144,7 @@ Ext.application({
                     	                  // This re-sends the URL to the server, but with fewer checks
                     	                  customRecordsPanel.getDockedComponent(2).items.getAt(1).searchClick(true);
                     	              }
-                    	        }                                      
+                    	        }
                     	    });
                     	} else {
                     	    // Display error message
@@ -154,7 +154,7 @@ Ext.application({
                     	        buttons: Ext.Msg.OK
                     	    });
                     	}
-                    	
+
                     }else{
                         if(records.length === 0){
                             Ext.Msg.show({
@@ -206,7 +206,7 @@ Ext.application({
 
         //Create our store for holding the set of layers that have been added to the map
         var activeLayerStore = Ext.create('portal.layer.LayerStore');
-        
+
         //Create our map implementations
         var mapCfg = {
             container : null,   //We will be performing a delayed render of this map
@@ -218,8 +218,8 @@ Ext.application({
 
         var map = null;
 
-        map = Ext.create('ga.map.openlayers.GAOpenLayersMap', mapCfg);         
-        
+        map = Ext.create('ga.map.openlayers.GAOpenLayersMap', mapCfg);
+
         var defaultLayerFactory = Ext.create('portal.layer.LayerFactory', {
             map : map,
             formFactory : Ext.create('auscope.layer.filterer.GAFormFactory', {map : map, showWMSFilter : false}),
@@ -235,9 +235,9 @@ Ext.application({
             querierFactory : Ext.create('auscope.layer.AuScopeQuerierFactory', {map: map}),
             rendererFactory : Ext.create('auscope.layer.AuScopeRendererFactory', {map: map})
         });
-        
 
-        
+
+
         var knownLayersPanel = Ext.create('auscope.widgets.panel.GAKnownLayerPanel', {
             title : 'Featured',
             id: 'knownLayersPanel',
@@ -256,7 +256,7 @@ Ext.application({
                 dismissDelay : 30000
             }
         });
-        
+
         var knownLayersMenuFactory = Ext.create('auscope.layer.GAFilterPanelMenuFactory',{map : map, showFilter: false, addResetFormActionForWMS : false, recordPanel : knownLayersPanel})
         knownLayersPanel.menuFactory = knownLayersMenuFactory;
 
@@ -299,7 +299,7 @@ Ext.application({
                 xtype: 'gafooter'
             }]
         };
-        
+
         // basic tabs 1, built from existing content
         var tabsPanel = Ext.create('Ext.TabPanel', {
             id : 'auscope-tabs-panel',
@@ -314,7 +314,7 @@ Ext.application({
                 customRecordsPanel
             ]
         });
-        
+
         /**
          * Used as a placeholder for the tree and details panel on the left of screen
          */
@@ -343,7 +343,7 @@ Ext.application({
                 }
             }
         });
-        
+
         /**
          * Add all the panels to the viewport
          */
@@ -390,7 +390,7 @@ Ext.application({
             serviceInformationIcon: 'img/information.png',
             mapExtentIcon: 'img/extent3.png',
             map : map,
-            layerFactory : activeLayerFactory,
+            layerFactory : activeLayerFactory/*,
             tooltip : {
                 anchor : 'top',
                 title : 'Featured Layers',
@@ -398,7 +398,7 @@ Ext.application({
                 showDelay : 100,
                 icon : 'img/information.png',
                 dismissDelay : 30000
-            }
+            }*/
         });
         var activeLayersMenuFactory = Ext.create('auscope.layer.GAFilterPanelMenuFactory',{map : map, showFilter: true, addResetFormActionForWMS : false, recordPanel : activeLayersPanel});
         activeLayersPanel.menuFactory = activeLayersMenuFactory;
